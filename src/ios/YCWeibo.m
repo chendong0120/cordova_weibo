@@ -37,9 +37,9 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
     request.redirectURI = self.redirectURI;
     request.scope = @"all";
     request.userInfo = @{@"SSO_From" : @"YCWeibo",
-            @"Other_Info_1" : [NSNumber numberWithInt:123],
-            @"Other_Info_2" : @[@"obj1", @"obj2"],
-            @"Other_Info_3" : @{@"key1" : @"obj1", @"key2" : @"obj2"}};
+                         @"Other_Info_1" : [NSNumber numberWithInt:123],
+                         @"Other_Info_2" : @[@"obj1", @"obj2"],
+                         @"Other_Info_3" : @{@"key1" : @"obj1", @"key2" : @"obj2"}};
     [WeiboSDK sendRequest:request];
 }
 /**
@@ -79,29 +79,47 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
         // if([WeiboSDK isWeiboAppInstalled]){
         WBMessageObject *message = [WBMessageObject message];
         WBWebpageObject *webpage = [WBWebpageObject object];
-        webpage.objectID = [NSString stringWithFormat:@"%f", [[NSDate date] timeIntervalSince1970]];
-        webpage.title = [params objectForKey:@"title"];
-        webpage.description = [NSString stringWithFormat:[params objectForKey:@"description"], [[NSDate date] timeIntervalSince1970]];
-        if (([params objectForKey:@"imageUrl"] && ![[params objectForKey:@"imageUrl"] isEqualToString:@""])) {
-            if ([[params objectForKey:@"imageUrl"] hasPrefix:@"http://"] || [[params objectForKey:@"imageUrl"] hasPrefix:@"https://"]) {
-                webpage.thumbnailData = [NSData dataWithContentsOfURL:
-                        [NSURL URLWithString:[params objectForKey:@"imageUrl"]]];
-            }
-
-        }
-        webpage.webpageUrl = [params objectForKey:@"url"];
-        message.mediaObject = webpage;
         NSUserDefaults *saveDefaults = [NSUserDefaults standardUserDefaults];
         NSString *token = [saveDefaults objectForKey:@"access_token"];
-        WBSendMessageToWeiboRequest *request = [WBSendMessageToWeiboRequest requestWithMessage:message authInfo:authRequest access_token:token];
-        request.userInfo = @{@"ShareMessageFrom" : @"YCWEIBO",
-                @"Other_Info_1" : [NSNumber numberWithInt:123],
-                @"Other_Info_2" : @[@"obj1", @"obj2"],
-                @"Other_Info_3" : @{@"key1" : @"obj1", @"key2" : @"obj2"}};
-        [WeiboSDK sendRequest:request];
-        // }else{
-
-        //}
+        
+        if (([params objectForKey:@"imageUrl"] && ![[params objectForKey:@"imageUrl"] isEqualToString:@""])) {
+            if ([[params objectForKey:@"imageUrl"] hasPrefix:@"http://"] || [[params objectForKey:@"imageUrl"] hasPrefix:@"https://"]) {
+                
+                webpage.objectID = [NSString stringWithFormat:@"%f", [[NSDate date] timeIntervalSince1970]];
+                webpage.title = [params objectForKey:@"title"];
+                webpage.description = [NSString stringWithFormat:[params objectForKey:@"description"], [[NSDate date] timeIntervalSince1970]];
+                
+                webpage.thumbnailData = [NSData dataWithContentsOfURL:
+                                         [NSURL URLWithString:[params objectForKey:@"imageUrl"]]];
+                webpage.webpageUrl = [params objectForKey:@"url"];
+                message.mediaObject = webpage;
+                WBSendMessageToWeiboRequest *request = [WBSendMessageToWeiboRequest requestWithMessage:message authInfo:authRequest access_token:token];
+                request.userInfo = @{@"ShareMessageFrom" : @"YCWEIBO",
+                                     @"Other_Info_1" : [NSNumber numberWithInt:123],
+                                     @"Other_Info_2" : @[@"obj1", @"obj2"],
+                                     @"Other_Info_3" : @{@"key1" : @"obj1", @"key2" : @"obj2"}};
+                [WeiboSDK sendRequest:request];
+                
+            }else{
+                 WBImageObject *image = [WBImageObject object];
+                image.imageData = [NSData dataWithContentsOfFile:[params objectForKey:@"imageUrl"]];
+                message.imageObject = image;
+                WBSendMessageToWeiboRequest *request = [WBSendMessageToWeiboRequest requestWithMessage:message authInfo:authRequest access_token:token];
+                
+                request.userInfo = @{@"ShareMessageFrom" : @"YCWEIBO",
+                                     @"Other_Info_1" : [NSNumber numberWithInt:123],
+                                     @"Other_Info_2" : @[@"obj1", @"obj2"],
+                                     @"Other_Info_3" : @{@"key1" : @"obj1", @"key2" : @"obj2"}};
+                [WeiboSDK sendRequest:request];
+            }
+            
+        }else{
+            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+            [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+            return;
+        }
+        
+        
     }
 }
 
@@ -209,7 +227,7 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
 }
 
 - (void)didReceiveWeiboRequest:(WBBaseRequest *)request {
-
+    
 }
 
 @end

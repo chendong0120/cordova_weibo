@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-
+import com.sina.weibo.sdk.api.ImageObject;
 import com.sina.weibo.sdk.api.WebpageObject;
 import com.sina.weibo.sdk.api.WeiboMessage;
 import com.sina.weibo.sdk.api.share.IWeiboShareAPI;
@@ -16,7 +16,6 @@ import com.sina.weibo.sdk.auth.WeiboAuthListener;
 import com.sina.weibo.sdk.auth.sso.SsoHandler;
 import com.sina.weibo.sdk.exception.WeiboException;
 import com.sina.weibo.sdk.utils.Utility;
-
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
@@ -24,6 +23,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -257,12 +258,27 @@ public class YCWeibo extends CordovaPlugin {
     private void sendSingleMessage(JSONObject params) {
         WeiboMessage weiboMessage = new WeiboMessage();
         try {
-            weiboMessage.mediaObject = getWebpageObj(params);
+            if (params.getString("imageUrl").startsWith("http://")
+                    || params.getString("imageUrl").startsWith("https://")) {
+
+                weiboMessage.mediaObject = getWebpageObj(params);
+            }else {
+                //取本地的图片
+                ImageObject imageObject = new ImageObject();
+                FileInputStream fis = new FileInputStream(params.getString("imageUrl"));
+                Bitmap bitmap = BitmapFactory.decodeStream(fis);
+                imageObject.setImageObject(bitmap);
+                weiboMessage.mediaObject = imageObject;
+
+            }
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
-        SendMessageToWeiboRequest request = new SendMessageToWeiboRequest();
+
+            SendMessageToWeiboRequest request = new SendMessageToWeiboRequest();
         request.transaction = String.valueOf(System.currentTimeMillis());
         request.message = weiboMessage;
         if (mWeiboShareAPI.isWeiboAppInstalled()) {

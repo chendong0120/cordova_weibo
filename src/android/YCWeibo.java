@@ -263,12 +263,8 @@ public class YCWeibo extends CordovaPlugin {
 
                 weiboMessage.mediaObject = getWebpageObj(params);
             }else {
-                //取本地的图片
-                ImageObject imageObject = new ImageObject();
-                FileInputStream fis = new FileInputStream(params.getString("imageUrl"));
-                Bitmap bitmap = BitmapFactory.decodeStream(fis);
-                imageObject.setImageObject(bitmap);
-                weiboMessage.mediaObject = imageObject;
+               
+                weiboMessage.mediaObject = getImageObj(params);
 
             }
         } catch (JSONException e) {
@@ -291,7 +287,28 @@ public class YCWeibo extends CordovaPlugin {
             sendSingleMsgWithOutClient(request);
         }
     }
-
+     /**
+     * 创建图片消息对象。
+     * @param params
+     * @return
+     * @throws JSONException
+     * @throws FileNotFoundException
+     */
+    private ImageObject getImageObj(JSONObject params) throws JSONException, FileNotFoundException {
+//         ImageObject imageObject = new ImageObject();
+//         FileInputStream fis = new FileInputStream(params.getString("imageUrl"));
+//         Bitmap bitmap = BitmapFactory.decodeStream(fis);
+//         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+// //                    imageObject.imageData = baos.toByteArray();
+//         imageObject.setImageObject(bitmap);
+        //取本地的图片
+                ImageObject imageObject = new ImageObject();
+                FileInputStream fis = new FileInputStream(params.getString("imageUrl"));
+                Bitmap bitmap = BitmapFactory.decodeStream(fis);
+                imageObject.setImageObject(bitmap);
+        return imageObject;
+    }
     /**
      * 在没有客户端的情况下分享消息到微博
      *

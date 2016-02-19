@@ -39,7 +39,7 @@
      <access origin="http://*.sinajs.cn/*"/>
      <access origin="http://*.sina.com.cn/*"/>
      <access origin="https://api.weibo.com/*"/>
-     <preference name="WEIBO_APP_ID" value="WEIBO_APP_ID"/>
+     <preference name="weibo_app_id" value="WEIBO_APP_ID"/>
    </config-file>
    <!--set ios URLTypes for Weibo -->
    <config-file target="*-Info.plist" parent="CFBundleURLTypes">
@@ -117,7 +117,7 @@
     <access origin="https://passport.weibo.cn/*"/>
     <access origin="http://*.sinaimg.cn/*"/>
     <access origin="https://api.weibo.com/*"/>
-    <preference name="WEIBO_APP_ID" value="WEIBO_APP_ID"/>
+    <preference name="weibo_app_id" value="weibo_app_id"/>
   </config-file>
   <!-- android  uses-permission for weibo sdk-->
   <config-file target="AndroidManifest.xml" parent="/manifest">

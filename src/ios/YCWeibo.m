@@ -37,9 +37,9 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
     request.redirectURI = self.redirectURI;
     request.scope = @"all";
     request.userInfo = @{@"SSO_From" : @"YCWeibo",
-                         @"Other_Info_1" : [NSNumber numberWithInt:123],
-                         @"Other_Info_2" : @[@"obj1", @"obj2"],
-                         @"Other_Info_3" : @{@"key1" : @"obj1", @"key2" : @"obj2"}};
+            @"Other_Info_1" : [NSNumber numberWithInt:123],
+            @"Other_Info_2" : @[@"obj1", @"obj2"],
+            @"Other_Info_3" : @{@"key1" : @"obj1", @"key2" : @"obj2"}};
     [WeiboSDK sendRequest:request];
 }
 /**
@@ -52,6 +52,7 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
     NSString *token = [saveDefaults objectForKey:@"access_token"];
     [saveDefaults removeObjectForKey:@"userid"];
     [saveDefaults removeObjectForKey:@"access_token"];
+    [saveDefaults removeObjectForKey:@"expires_time"];
     [saveDefaults synchronize];
     if (token) {
         [WeiboSDK logOutWithToken:token delegate:self.appDelegate withTag:nil];
@@ -81,14 +82,14 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
         WBWebpageObject *webpage = [WBWebpageObject object];
         NSUserDefaults *saveDefaults = [NSUserDefaults standardUserDefaults];
         NSString *token = [saveDefaults objectForKey:@"access_token"];
-        
+
         if (([params objectForKey:@"imageUrl"] && ![[params objectForKey:@"imageUrl"] isEqualToString:@""])) {
             if ([[params objectForKey:@"imageUrl"] hasPrefix:@"http://"] || [[params objectForKey:@"imageUrl"] hasPrefix:@"https://"]) {
-                
+
                 webpage.objectID = [NSString stringWithFormat:@"%f", [[NSDate date] timeIntervalSince1970]];
                 webpage.title = [params objectForKey:@"title"];
                 webpage.description = [NSString stringWithFormat:[params objectForKey:@"description"], [[NSDate date] timeIntervalSince1970]];
-                
+
                 webpage.thumbnailData = [NSData dataWithContentsOfURL:
                                          [NSURL URLWithString:[params objectForKey:@"imageUrl"]]];
                 webpage.webpageUrl = [params objectForKey:@"url"];
@@ -99,27 +100,27 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
                                      @"Other_Info_2" : @[@"obj1", @"obj2"],
                                      @"Other_Info_3" : @{@"key1" : @"obj1", @"key2" : @"obj2"}};
                 [WeiboSDK sendRequest:request];
-                
+
             }else{
                  WBImageObject *image = [WBImageObject object];
                 image.imageData = [NSData dataWithContentsOfFile:[params objectForKey:@"imageUrl"]];
                 message.imageObject = image;
                 WBSendMessageToWeiboRequest *request = [WBSendMessageToWeiboRequest requestWithMessage:message authInfo:authRequest access_token:token];
-                
+
                 request.userInfo = @{@"ShareMessageFrom" : @"YCWEIBO",
                                      @"Other_Info_1" : [NSNumber numberWithInt:123],
                                      @"Other_Info_2" : @[@"obj1", @"obj2"],
                                      @"Other_Info_3" : @{@"key1" : @"obj1", @"key2" : @"obj2"}};
                 [WeiboSDK sendRequest:request];
             }
-            
+
         }else{
             CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
             [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
             return;
         }
-        
-        
+
+
     }
 }
 
@@ -159,10 +160,12 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
             WBSendMessageToWeiboResponse *sendMessageToWeiboResponse = (WBSendMessageToWeiboResponse *) response;
             NSString *accessToken = [sendMessageToWeiboResponse.authResponse accessToken];
             NSString *userID = [sendMessageToWeiboResponse.authResponse userID];
-            if (accessToken && userID) {
+            NSString *expirationTime = [NSString stringWithFormat:@"%f",[sendMessageToWeiboResponse.authResponse.expirationDate timeIntervalSince1970] * 1000];
+            if (accessToken && userID && expirationTime) {
                 NSUserDefaults *saveDefaults = [NSUserDefaults standardUserDefaults];
                 [saveDefaults setValue:accessToken forKey:@"access_token"];
                 [saveDefaults setValue:userID forKey:@"userid"];
+                [saveDefaults setValue:expirationTime forKey:@"expires_time"];
                 [saveDefaults synchronize];
             }
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
@@ -195,9 +198,12 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
             NSMutableDictionary *Dic = [NSMutableDictionary dictionaryWithCapacity:2];
             [Dic setObject:[(WBAuthorizeResponse *) response userID] forKey:@"userid"];
             [Dic setObject:[(WBAuthorizeResponse *) response accessToken] forKey:@"access_token"];
+            [Dic setObject:[NSString stringWithFormat:@"%f",[(WBAuthorizeResponse *) response expirationDate].timeIntervalSince1970 * 1000] forKey:@"expires_time"];
+
             NSUserDefaults *saveDefaults = [NSUserDefaults standardUserDefaults];
             [saveDefaults setValue:[(WBAuthorizeResponse *) response userID] forKey:@"userid"];
             [saveDefaults setValue:[(WBAuthorizeResponse *) response accessToken] forKey:@"access_token"];
+            [saveDefaults setValue:[NSString stringWithFormat:@"%f",[(WBAuthorizeResponse *) response expirationDate].timeIntervalSince1970 * 1000] forKey:@"expires_time"];
             [saveDefaults synchronize];
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:Dic];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callback];
@@ -227,7 +233,7 @@ NSString *WEIBO_USER_CANCEL_INSTALL = @"user cancel install weibo";
 }
 
 - (void)didReceiveWeiboRequest:(WBBaseRequest *)request {
-    
+
 }
 
 @end

@@ -16,6 +16,7 @@ import com.sina.weibo.sdk.auth.WeiboAuthListener;
 import com.sina.weibo.sdk.auth.sso.SsoHandler;
 import com.sina.weibo.sdk.exception.WeiboException;
 import com.sina.weibo.sdk.utils.Utility;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
@@ -78,11 +79,14 @@ public class YCWeibo extends CordovaPlugin {
      *
      * @param access_token
      * @param userid
+     * @param expires_time
      * @return
      */
-    private JSONObject makeJson(String access_token, String userid) {
-        String json = "{\"access_token\": \"" + access_token
-                + "\",  \"userid\": \"" + userid + "\"}";
+    private JSONObject makeJson(String access_token, String userid, long expires_time) {
+        String json = "{\"access_token\": \"" + access_token + "\", " +
+                " \"userid\": \"" + userid + "\", " +
+                " \"expires_time\": \"" + String.valueOf(expires_time) + "\"" +
+                "}";
         JSONObject jo = null;
         try {
             jo = new JSONObject(json);
@@ -108,7 +112,7 @@ public class YCWeibo extends CordovaPlugin {
                 .getActivity());
         if (mAccessToken.isSessionValid()) {
             JSONObject jo = makeJson(mAccessToken.getToken(),
-                    mAccessToken.getUid());
+                    mAccessToken.getUid(), mAccessToken.getExpiresTime());
             this.webView.sendPluginResult(new PluginResult(
                     PluginResult.Status.OK, jo), callbackContext
                     .getCallbackId());
@@ -263,7 +267,7 @@ public class YCWeibo extends CordovaPlugin {
 
                 weiboMessage.mediaObject = getWebpageObj(params);
             }else {
-               
+
                 weiboMessage.mediaObject = getImageObj(params);
 
             }
@@ -273,8 +277,7 @@ public class YCWeibo extends CordovaPlugin {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
-            SendMessageToWeiboRequest request = new SendMessageToWeiboRequest();
+        SendMessageToWeiboRequest request = new SendMessageToWeiboRequest();
         request.transaction = String.valueOf(System.currentTimeMillis());
         request.message = weiboMessage;
         if (mWeiboShareAPI.isWeiboAppInstalled()) {
@@ -360,7 +363,7 @@ public class YCWeibo extends CordovaPlugin {
                 AccessTokenKeeper.writeAccessToken(
                         YCWeibo.this.cordova.getActivity(), mAccessToken);
                 JSONObject jo = makeJson(mAccessToken.getToken(),
-                        mAccessToken.getUid());
+                        mAccessToken.getUid(),mAccessToken.getExpiresTime());
                 YCWeibo.this.webView.sendPluginResult(new PluginResult(
                         PluginResult.Status.OK, jo), currentCallbackContext.getCallbackId());
             } else {
